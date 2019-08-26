@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Tezos NFT Standard by Stove Labs</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+        integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+    <link rel="stylesheet" href="css/prism.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://raw.githubusercontent.com/daneden/animate.css/master/animate.css">
+</head>
+<body>
+
+    <div class="container">
+        <div class="row jumbo">
+            <div class="col-xs-12 col-md-6">
+                <h1 class="title">
+                    Tezos NFT Standard
+                </h1>
+                
+                <p class="info">
+                    The following standard outlines a smart contract interface required to enable Non Fungible Tokens on the Tezos blockchain - along with integration examples.
+                </p>
+
+                <div class="social">
+                    <a href="https://github.com/stove-labs/nft.stove-labs.com">
+                        <i class="fab fa-github"></i>
+                    </a>
+                    <a href="https://twitter.com/stove_labs">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="col-xs-12 col-md-5 col-md-offset-1">
+                <img class="img-responsive illustration" src="img/undraw_teddy_bear_hns1.svg" alt=""/>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-xs-12">
+                <h2 class="page-subtitle">
+                    Proposed Interface
+                </h2>
+                <div>
+                    <pre><code class="language-pascaligo">type nftId is nat;
+
+// @remarks Meta data will be added to this record.
+type nft is record [
+owner : address;
+]
+
+type nfts is map(nftId, nft);
+
+type storageType is nfts;
+
+type actionMint is record [
+nftToMintId : nftId;
+nftToMint : nft;
+]
+
+type actionTransfer is record [
+nftToTransfer : nftId;
+destination : address;
+]
+
+type actionBurn is record [
+nftToBurnId : nftId;
+]
+
+type action is
+| Mint of actionMint
+| Transfer of actionTransfer
+| Burn of actionBurn
+
+// Mints a new NFT by creating a new entry in the contract.
+// @param nftToMintId - ID of the NFT
+// @param nftToMint - The NFT data structure
+function mint(const action : actionMint ; const s : storageType) : (list(operation) * storageType) is
+block { skip } with ((nil: list(operation)) , s)
+
+// Transfers the ownership of an NFT by replacing the owner address.
+// @param nftToTransfer - ID of the NFT
+// @param destination - Address of the recipient
+function transfer(const action : actionTransfer ; const s : storageType) : (list(operation) * storageType) is
+block { skip } with ((nil: list(operation)) , s)
+
+// Burns an NFT by removing its entry from the contract.
+// @param nftToBurnId - ID of the NFT
+function burn(const action : actionBurn ; const s : storageType) : (list(operation) * storageType) is
+block { skip } with ((nil: list(operation)) , s)
+
+// @remarks In v004 Athens, Michelson does not support multiple entrypoints. This is solved 
+// in Ligo through variants and pattern matching.
+// @param Any of the action types defined above.
+function main(const action : action; const s : storageType) : (list(operation) * storageType) is 
+block {skip} with 
+case action of
+| Mint (mt) -> mint (mt, s)
+| Transfer (tx) -> transfer (tx, s)
+| Burn (bn) -> burn (bn, s)
+end
+                    </code></pre>
+                    <div class="contribute">
+                        <a href="https://github.com/stove-labs/nft.stove-labs.com/issues">
+                            <button class="btn btn-default">
+                                Contribute
+                                <i class="fas fa-external-link-alt"></i>
+                            </button>
+                        </a>
+                        <a href="https://t.me/stove_labs">
+                            <button class="btn btn-default">
+                                Get in touch
+                                <i class="fas fa-comment"></i>
+                            </button>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row usage-examples">
+            <div class="col-xs-12">
+                <h2 class="page-subtitle">
+                    Usage examples
+                </h2>
+                <p><i>Those samples only serve as a demonstration of how the contract will be deployed & used once it's implemented.</i></p>
+                
+                <h4>Contract deployment</h4>
+                <div>
+                    <pre><code class="language-shell-session"># Compile the LIGO contract
+$ ligo compile-contract nft.ligo main > nft.tz
+
+# Compile the LIGO storage initial values into a Michelson representation
+$ ligo compile-storage nft.ligo main 'map 1n -> record owner = ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address); end end'
+{ Elt 1 "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" }
+
+# Originate the compiled contract using the tezos-client
+$ tezos-client originate contract nft for alice transferring 0 from alice running nft.tz --init '"{ Elt 1 \"tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx\" }"'
+
+                    </code></pre>
+                </div>
+
+                <h4>Transfering ownership of an existing token</h4>
+                <div>
+                    <pre><code class="language-shell-session"># Compile the LIGO transaction parameter into it's Michelson representation
+$ ligo compile-parameter nft.ligo main 'Transfer(record nftToTransfer = 1n ; destination = ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address) end)'
+(Right (Pair "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" 1))
+
+# Invoke the contract by a parametrized transaction
+$ tezos-client transfer 0 from alice to nft --arg '(Right (Pair \"tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx\" 1))'
+                    </code></pre>
+                </div>
+
+                <h4>Minting of a new token</h4>
+                <div>
+                    <pre><code class="language-shell-session"># Compile the LIGO transaction parameter into it's Michelson representation
+$ ligo compile-parameter nft.ligo main 'Mint(record nftToMintId = 2n ; nftToMint = record owner = ("tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" : address); end; end)'
+(Left (Right (Pair "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" 2)))
+
+# Invoke the contract by a parametrized transaction
+$ tezos-client transfer 0 from alice to nft --arg '(Left (Right (Pair \"tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx\" 2)))'
+                    </code></pre>
+                </div>
+
+                <h4>Burning of an existing token</h4>
+                <div>
+                    <pre><code class="language-shell-session"># Compile the LIGO transaction parameter into it's Michelson representation
+$ ligo compile-parameter nft.ligo main 'Burn(record nftToBurnId = 1n end)'
+(Left (Left 1))
+
+# Invoke the contract by a parametrized transaction
+$ tezos-client transfer 0 from alice to nft --arg '(Left (Left 1))'
+                    </code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-xs-12">
+                <h2 class="page-subtitle">
+                    FAQ
+                </h2>
+            </div>
+            <div class="col-xs-12">
+                <br/>
+                <div class="question">
+                    <p><b>Can we have more metadata?</b></p>
+                    <p><i>One of the trickiest challanges when designing an NFT contract, is how you deal with metadata. Data that does not need to be accesed on-chain within other contracts, could be serialized, or stored externally via decentralized data distribution solutions such as IPFS.
+                    </i></p>
+                </div>
+                <div class="question">
+                    <p><b>Will the standard implementation support proto005 Michelson entrypoints?</b></p>
+                    <p><i>Yes, native Michelson entrypoints will be supported, as soon as they're available in 
+                        the reference implementation language (LIGO).</i></p>
+                </div>
+                <div class="question">
+                    <p><b>Is this the final feature set?</b></p>
+                    <p><i>The currently available contract interface, is of couse one of the several variants of the reference implementation contract, further examples will allow to take out unnecessary features, or add extra ones.</i></p>
+                </div>
+                <div class="question">
+                        <p><b>How can wallets integrate the NFT standard?</b></p>
+                        <p><i>Apart from the usage examples with tezos-client, there'll be an SDK for wallet integrations - once the implementation of the contract is done. This will allow wallet developers to integrate NFT support.</i></p>
+                    </div>
+                <div class="question">
+                    <p><b>Are there any projects using the standard?</b></p>
+                    <p><i>Yes there are, check out the Partners & Projects section below.</i></p>
+                </div>
+                <div class="question">
+                    <p><b>Can a 3rd party smart contract, interact with the NFT contract?</b></p>
+                    <p><i>Yes, especially when you delegate asset ownership to a smart contract.</i></p>
+                </div>
+                <div class="question">
+                    <p><b>What is LIGO?</b></p>
+                    <p><i>LIGO is a smart contract programing language for the Tezos blockchain, you can learn more about it <a href="https://ligolang.org">here</a>.</i></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row partners">
+            <div class="col-xs-12">
+                <h2 class="page-subtitle">
+                    Partners & Projects
+                </h2>
+                <br/>
+            </div>
+            <div class="col-xs-12">
+                <div class="row">
+                    <div class="col-xs-6 col-md-3 partner">
+                        <a href="https://satoshistreasure.xyz/tezos">
+                            <img src="img/ST_tezosHUNT_light-stack.svg" alt="" class="img-responsive">
+                        </a>
+                    </div>
+                    <div class="col-xs-6 col-md-3 partner">
+                        <a href="https://ligolang.org">
+                            <img src="img/ligo-logo.svg" alt="" class="img-responsive">
+                        </a>
+                    </div>
+                    <div class="col-xs-6 col-md-3 partner">
+                        <a href="https://stove-labs.com">
+                            <img src="img/logo_transparent.png" alt="" class="img-responsive">
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row footer">
+            <div class="col-xs-12">
+                <span>Made possible thanks to the</span>
+                <a href="https://tezos.foundation">
+                    <img src="img/foundation-logo.svg" class="img-responsive">
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
+        integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"
+        integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd"
+        crossorigin="anonymous"></script>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-134909400-1"></script>
+    <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    // gtag('config', 'UA-134909400-1');
+    </script>
+    <script src="js/prism.min.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Comfortaa:700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=PT+Serif&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/1e6602f603.js"></script>
+</body>
+</html>
