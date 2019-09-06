@@ -60,15 +60,37 @@ export class TezosNFT {
     return tokens.length;
   }
 
-  async forgeTransferTokenOperation(publicKeyHash: string, id: string, destination: string): Promise<string> {
+  private async prepareForOperationForging(publicKeyHash: string) {
     const counter = await TezosNodeReader.getCounterForAccount(this.config.serverAddress, publicKeyHash) + 1;
     const blockHead = await TezosNodeReader.getBlockHead(this.config.serverAddress);
+    return { counter, blockHead };
+  }
+
+  /**
+   * @TODO: Fix types
+   * @param transaction 
+   * @param michelsonParameters 
+   * @param blockHead 
+   */
+  private async forgeOperation(transaction: any, michelsonParameters: any, blockHead: any) {
+    transaction.parameters = JSON.parse(
+      TezosLanguageUtil.translateMichelsonToMicheline(michelsonParameters)
+    );
+    
+    /**
+     * @TODO: Operations could be forged locally as well 
+     */
+    return await TezosNodeWriter.forgeOperationsRemotely(this.config.serverAddress, blockHead, [transaction])
+  }
+
+  async forgeTransferTokenOperation(publicKeyHash: string, id: string, destination: string): Promise<string> {
+    const { counter, blockHead } = await this.prepareForOperationForging(publicKeyHash);
 
     let transaction: any = {
       destination: this.config.contractAddress,
       amount: "0",
-      storage_limit: "1000",
-      gas_limit: "100000",
+      storage_limit: "0",
+      gas_limit: "200000",
       counter: counter.toString(),
       fee: "100000",
       source: publicKeyHash,
@@ -83,11 +105,7 @@ export class TezosNFT {
      * (Right (Pair "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx" 1))
      */
     const michelsonParameters = `(Right (Pair "${destination}" ${id}))`;
-    transaction.parameters = JSON.parse(
-      TezosLanguageUtil.translateMichelsonToMicheline(michelsonParameters)
-    )
-
-    return await TezosNodeWriter.forgeOperationsRemotely(this.config.serverAddress, (blockHead as any), [transaction])
+    return await this.forgeOperation(transaction, michelsonParameters, blockHead);
   }
 }
 

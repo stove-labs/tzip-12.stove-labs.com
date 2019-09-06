@@ -3,7 +3,7 @@ import * as fetchMock from "fetch-mock";
 import { StoreType, KeyStore } from "conseiljs";
 
 const serverAddress = "http://localhost:8732";
-const contractAddress = "KT1FBwt5mWZ9Ymf4Y5qBr35NE71SWSkAfwgo";
+const contractAddress = "KT1JooU649TWnvjqzciUngQP3zdZpWxkNREE";
 const singleNFTStorage = {"prim":"Pair","args":[{"string":"tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx"},[{"prim":"Elt","args":[{"int":"1"},{"string":"tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx"}]}]]};
 const multipleNFTStorage = {"prim":"Pair","args":[{"string":"tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx"},[{"prim":"Elt","args":[{"int":"1"},{"string":"tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx"}]},{"prim":"Elt","args":[{"int":"2"},{"string":"tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx"}]},{"prim":"Elt","args":[{"int":"3"},{"string":"tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV"}]}]]}
 
@@ -86,12 +86,10 @@ describe("TezosNFT", () => {
     });
 
     describe("forgeTransferTokenOperation", () => {
-        fit("should transfer token ownership to the given address", async() => {
+        it("should transfer token ownership to the given address", async() => {
             const publicKeyHash = "tz1KqTpEZ7Yob7QbPE4Hy4Wo8fHG8LhKxZSx";
     
-            const operation = await nft.forgeTransferTokenOperation(publicKeyHash, "2", "tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV");
-            console.log("injected");
-            console.log(operation);
+            const operation = await nft.forgeTransferTokenOperation(publicKeyHash, "1", "tz1TGu6TN5GSez2ndXXeDX6LgUDvLzPLqgYV");
         });
     });
 });

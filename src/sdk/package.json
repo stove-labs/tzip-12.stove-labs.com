@@ -64,7 +64,7 @@
   },
   "license": "ISC",
   "main": "src/index.ts",
-  "name": "sdk",
+  "name": "@stove-labs/tezos-nft-sdk",
   "scripts": {
     "build": "npm run build:prod",
     "build:dev": "webpack --mode development --config ./webpack.config.js --progress --color --display-error-details",
