@@ -127,7 +127,6 @@ end
                 <h2 class="page-subtitle">
                     Usage examples
                 </h2>
-                <p><i>Those samples only serve as a demonstration of how the contract will be deployed & used once it's implemented.</i></p>
                 
                 <h4>Contract deployment</h4>
                 <div>
@@ -174,6 +173,33 @@ $ ligo compile-parameter nft.ligo main 'Burn(record nftToBurnId = 1n end)'
 
 # Invoke the contract by a parametrized transaction
 $ tezos-client transfer 0 from alice to nft --arg '(Left (Left 1))'
+                    </code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="row usage-examples">
+            <div class="col-xs-12">
+                <h2 class="page-subtitle">
+                    SDK
+                </h2>
+                
+                <i>You can find more SDK usage examples <a href="https://github.com/stove-labs/nft.stove-labs.com/blob/master/src/sdk/src/TezosNFT.spec.ts">here</a>.</i>
+
+                <h4>Getting all tokens</h4>
+                <div>
+                    <pre><code class="language-typescript">// Setup the SDK & retrieve all existing tokens
+import { TezosNFT, Config } from "@stove-labs/tezos-nft-sdk";
+
+const config: Config = {
+    serverAddress: "http://localhost:8732",
+    contractAddress: "KT1J4g5sm71ynvr5SevBCU5udzE759SonDvY"
+};
+
+const nft = new TezosNFT(config);
+
+nft.getAllTokens()
+    .then(tokens => console.log("tokens", tokens));
                     </code></pre>
                 </div>
             </div>

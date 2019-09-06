@@ -63,7 +63,7 @@
     "test": "tests"
   },
   "license": "ISC",
-  "main": "src/index.ts",
+  "main": "src/TezosNFT.ts",
   "name": "@stove-labs/tezos-nft-sdk",
   "scripts": {
     "build": "npm run build:prod",
@@ -76,7 +76,7 @@
     "start": "npm run server:dev",
     "test": "karma start"
   },
-  "version": "0.0.1",
+  "version": "0.0.2-pre-alpha.7",
   "dependencies": {
     "conseiljs": "^0.2.9"
   }
