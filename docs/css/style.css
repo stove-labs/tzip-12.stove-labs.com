@@ -40,6 +40,7 @@ h1 {
 }
 
 .jumbo .illustration {
+    margin-top: 24px;
 }
 
 .jumbo .info {
@@ -153,13 +154,14 @@ a:focus, a:hover {
 
 pre.language-pascaligo::after {
     content: "";
-    width: 500px;
-    height: 550px;
+    width: 300px;
+    height: 350px;
     background: url("../img/logo_transparent.png");
     background-repeat: no-repeat;
     background-position: center;
-    top: calc(50% - 215px);
-    left: calc(50% - 250px);
+    background-size: cover;
+    top: calc(50% - 175px);
+    left: calc(50% - 150px);
     position: absolute;
     display: inline-block;
     opacity: .04;
@@ -187,6 +189,9 @@ pre.language-pascaligo::after {
     border: none;
     margin: 0 auto;
     padding: 12px 18px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    margin-left: 7px;
     font-size: 16px;
     text-transform: uppercase;
     transition: background-color 100ms ease-in-out;
@@ -204,6 +209,7 @@ pre.language-pascaligo::after {
     width: 100%;
     text-align: center;
     z-index: 9999;
+    font-size: 10px;
     padding-left: 12px;
     padding-right: 12px;
 }
@@ -224,6 +230,36 @@ pre.language-pascaligo::after {
     display: inline-block;
     padding-right: 8px;
     padding-left: 8px;
+}
+
+.jumbo {
+    margin-top: 150px;
+}
+
+@media only screen and (min-width : 1000px) {
+    .contribute .btn {
+        margin: 0 auto;
+    }
+
+    .jumbo .illustration {
+        margin-top: 0px;
+    }
+
+    pre.language-pascaligo::after {
+        content: "";
+        width: 500px;
+        height: 550px;
+        background: url("../img/logo_transparent.png");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: cover;
+        top: calc(50% - 250px);
+        left: calc(50% - 250px);
+        position: absolute;
+        display: inline-block;
+        opacity: .04;
+        z-index: 9999;
+    }
 }
 
 @media only screen and (min-width : 1200px) {
