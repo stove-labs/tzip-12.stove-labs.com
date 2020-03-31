@@ -4,40 +4,139 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Tezos NFT Standard by Stove Labs</title>
+    <title>TZIP-12 Token Standard</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
         integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
     <link rel="stylesheet" href="css/prism.css">
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://raw.githubusercontent.com/daneden/animate.css/master/animate.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.2/animate.min.css">
 </head>
 <body>
 
+    <div class="popup">
+        <div class="popup-inside animated fadeInDown delay-1s">
+            🚧 <span>Contents of this page are an early work in progress. Please consider experimental until further notice.</span> 🚧
+        </div>
+    </div>
+
     <div class="container">
         <div class="row jumbo">
-            <div class="col-xs-12 col-md-6">
+            <div class="col-xs-12">
                 <h1 class="title">
-                    Tezos NFT Standard
+                    TZIP-12 Token Standard
                 </h1>
+                <h2 class="subtitle">
+                    Implemented by <b><a href="https://stove-labs.com/" target="_blank">Stove Labs</a></b>, proposed by the <b><a href="https://tqtezos.com/" target="_blank">Tocqueville Group</a></b>.
+                </h2>
+            </div>
+            <div class="col-xs-12 col-md-7">
                 
-                <p class="info">
+                <!-- <p class="info">
                     The following standard outlines a smart contract interface required to enable Non Fungible Tokens on the Tezos blockchain - along with integration examples.
-                </p>
+                </p> -->
 
-                <div class="social">
-                    <a href="https://github.com/stove-labs/nft.stove-labs.com">
-                        <i class="fab fa-github"></i>
+                <p class="info">
+                    TZIP-12 is a next generation token standard aiming to standardize integration & token data exchange between smart contracts and clients.
+                    It supports multiple token types, such as Fungbile, Non-Fungible, Non-Transferrable or others.
+                </p>
+                <div class="contribute">
+                    <a target="_blank" href="https://github.com/stove-labs/tzip-12">
+                        <button class="btn btn-default">
+                            Contribute
+                            <i class="fab fa-github"></i>
+                        </button>
                     </a>
-                    <a href="https://twitter.com/stove_labs">
-                        <i class="fab fa-twitter"></i>
+                    <a target="_blank" href="https://twitter.com/stove_labs">
+                        <button class="btn btn-default">
+                            Get in touch
+                            <i class="fab fa-twitter"></i>
+                        </button>
+                    </a>
+                    <a target="_blank" href="https://gitlab.com/tzip/tzip/-/blob/master/proposals/tzip-12/tzip-12.md">
+                        <button class="btn btn-default">
+                            Proposal
+                            <i class="far fa-file-alt"></i>
+                        </button>
                     </a>
                 </div>
             </div>
-            <div class="col-xs-12 col-md-5 col-md-offset-1">
+            <div class="col-xs-12 col-md-5 col-md-offset-0">
                 <img class="img-responsive illustration" src="img/undraw_teddy_bear_hns1.svg" alt=""/>
             </div>
+
         </div>
 
+        <div class="row">
+
+                <div class="col-xs-12">
+                    <h2 class="page-subtitle">Data Structure</h2>
+    
+                    <pre><code class="language-pascaligo">(* token_id is a nat, following the TZIP-12 spec *)
+type token_id is nat;
+type token_owner is address;
+(* token_balance is either 0 or positive, therefore it's a nat *)
+type token_balance is nat;
+
+(* 
+    token_lookup_id is always a unique combination of a token_id and a token_owner, 
+    representing a key in the big_map of token_balances
+*)
+type token_lookup_id is record
+    token_id : token_id;
+    token_owner : token_owner;
+end;
+
+type token_balances is big_map(token_lookup_id, token_balance);
+
+(* 
+    Total supply is persisted separately rather than computed at each request
+    in order to optimise gas costs.
+*)
+type total_token_supply_count is nat;
+type total_token_supply is big_map(token_id, total_token_supply_count);
+
+type storage is record
+    token_balances : token_balances;
+    (* See https://www.wordhippo.com/what-is/the-plural-of/supply.html *)
+    total_token_supply : total_token_supply;
+end;
+                    </code>
+                    </pre>
+                </div>
+
+            <div class="col-xs-12">
+                <h2 class="page-subtitle">Available Entrypoints</h2>
+
+                <pre><code class="language-pascaligo">type transfer is record
+    token_id : token_id;
+    amount : token_balance;
+    from_ : token_owner;
+    to_ : token_owner;
+end;
+
+type transfer_param is list(transfer);
+
+type action is
+| Transfer of transfer_param
+| Balance_of of balance_of_param
+| Total_supply of total_token_supply_param
+
+(* Default function that represents our contract, it's sole purpose here is the entrypoint routing *)
+function main (const action : action; var storage : storage) : (list(operation) * storage)
+    is (case action of
+    (* 
+        Unwrap the `Transfer(...)` parameters and invoke the transfer function.
+        The return value of `transfer(...)` is then returned as a result of `main(...)` as well.
+     *)
+    | Transfer(transfer_param) -> transfer(transfer_param, storage)
+    | Balance_of(balance_of_param) -> balance_of(balance_of_param, storage)
+    | Total_supply(total_token_supply_param) -> total_token_supply(total_token_supply_param, storage)
+    end)
+                </code>
+                </pre>
+            </div>
+        </div>
+<!-- 
         <div class="row">
             <div class="col-xs-12">
                 <h2 class="page-subtitle">
@@ -176,88 +275,68 @@ $ tezos-client transfer 0 from alice to nft --arg '(Left (Left 1))'
                     </code></pre>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <div class="row usage-examples">
             <div class="col-xs-12">
                 <h2 class="page-subtitle">
-                    SDK
+                    Token deployment
                 </h2>
                 
-                <i>You can find more SDK usage examples <a href="https://github.com/stove-labs/nft.stove-labs.com/blob/master/src/sdk/src/TezosNFT.spec.ts">here</a>.</i>
+                <p><b> ⚠️ Please see the full <a href="https://github.com/stove-labs/tzip-12">README</a> for comprehensive usage instructions.</b></p>
 
-                <h4>Installation</h4>
+                <h4>Set up the development environment</h4>
                 <div>
-                    <pre><code class="language-shell-session"># Currently the SDK is shipped as a Typescript package
-npm i --save @stove-labs/tezos-nft-sdk@pre-alpha
+                    <pre><code class="language-shell-session">git clone https://github.com/stove-labs/tzip-12
+cd tzip-12
+npm i
                     </code></pre>
 
-                <h4>Getting all tokens</h4>
-                <div>
-                    <pre><code class="language-typescript">// Setup the SDK & retrieve all existing tokens
-import { TezosNFT, Config } from "@stove-labs/tezos-nft-sdk";
+                    <h4>Configure the initial token storage state</h4>
+                    <div>
+                        <pre><code class="language-javascript">// migrations/tzip_12.js
+const tokenBalance = 10;
+const tokenId = 0;
+/**
+* Generate lookup IDs for both alice & bob with tokenId = 0
+*/
+const tokenLookupIdAlice = getTokenLookupId(tokenId, alice.pkh);
 
-const config: Config = {
-    serverAddress: "http://localhost:8732",
-    contractAddress: "KT1J4g5sm71ynvr5SevBCU5udzE759SonDvY"
+/**
+* Initialize the storage with Alice owning a certain token balance.
+*/
+const initialStorage = {
+    token_balances: new MichelsonMap(),
+    total_token_supply: new MichelsonMap()
 };
 
-const nft = new TezosNFT(config);
+initialStorage.token_balances.set(tokenLookupIdAlice, tokenBalance);
 
-nft.getAllTokens()
-    .then(tokens => console.log("tokens", tokens));
+initialStorage.total_token_supply.set(
+    tokenId, 
+    calculateTotalTokenSupply(initialStorage)
+);
+                    </code></pre>
+
+                <h4>Migrate the contract</h4>
+                <div>
+                    <pre><code class="language-typescript">// Start a private sandbox network in Docker 🐳
+npm run start-sandbox -- carthage
+// Migrate the token contract
+npm run migrate
                     </code></pre>
                 </div>
             </div>
         </div>
-
-        <div class="row">
-            <div class="col-xs-12">
-                <h2 class="page-subtitle">
-                    FAQ
-                </h2>
-            </div>
-            <div class="col-xs-12">
-                <br/>
-                <div class="question">
-                    <p><b>Can we have more metadata?</b></p>
-                    <p><i>One of the trickiest challenges when designing NFT contracts is, how you deal with metadata. Data that does not need to be accesed on-chain within other contracts, could be serialized, or stored externally via decentralized data distribution solutions such as IPFS.
-                    </i></p>
-                </div>
-                <div class="question">
-                    <p><b>Will the standard implementation support proto005 Michelson entrypoints?</b></p>
-                    <p><i>Yes, native Michelson entrypoints will be supported, as soon as they're available in 
-                        the reference implementation language (LIGO).</i></p>
-                </div>
-                <div class="question">
-                    <p><b>Is this the final feature set?</b></p>
-                    <p><i>No, because you can combine features as needed and deviate from the reference contract implementation as seen above. Further examples will follow.</i></p>
-                </div>
-                <div class="question">
-                        <p><b>How can wallets integrate the NFT standard?</b></p>
-                        <p><i>Apart from the usage examples with tezos-client, there'll be an SDK for wallet integrations - once the implementation of the contract is done. This will allow wallet developers to integrate NFT support.</i></p>
-                    </div>
-                <div class="question">
-                    <p><b>Are there any projects using the standard?</b></p>
-                    <p><i>Yes there are, check out the Partners & Projects section below.</i></p>
-                </div>
-                <div class="question">
-                    <p><b>Can a 3rd party smart contract, interact with the NFT contract?</b></p>
-                    <p><i>Yes, especially when you delegate asset ownership to a smart contract.</i></p>
-                </div>
-                <div class="question">
-                    <p><b>What is LIGO?</b></p>
-                    <p><i>LIGO is a smart contract programing language for the Tezos blockchain, you can learn more about it <a href="https://ligolang.org">here</a>.</i></p>
-                </div>
             </div>
         </div>
-        
+
         <div class="row partners">
             <div class="col-xs-12">
                 <h2 class="page-subtitle">
-                    Partners & Projects
+                    Partners &amp; Projects
                 </h2>
-                <br/>
+                <br>
             </div>
             <div class="col-xs-12">
                 <div class="row">
@@ -268,7 +347,12 @@ nft.getAllTokens()
                     </div>
                     <div class="col-xs-6 col-md-3 partner">
                         <a href="https://ligolang.org">
-                            <img src="img/ligo-logo.svg" alt="" class="img-responsive">
+                            <img src="https://ligolang.org/img/logo.svg" alt="" class="img-responsive">
+                        </a>
+                    </div>
+                    <div class="col-xs-6 col-md-3 partner">
+                        <a href="https://tqtezos.com/">
+                            <img src="https://tqtezos.com/static/images/logo-colored.svg" alt="" class="img-responsive">
                         </a>
                     </div>
                     <div class="col-xs-6 col-md-3 partner">
@@ -280,6 +364,7 @@ nft.getAllTokens()
             </div>
         </div>
 
+
         <div class="row footer">
             <div class="col-xs-12">
                 <span>Made possible thanks to the</span>
@@ -288,6 +373,7 @@ nft.getAllTokens()
                 </a>
             </div>
         </div>
+
     </div>
 
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"
@@ -301,11 +387,17 @@ nft.getAllTokens()
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    // gtag('config', 'UA-134909400-1');
+    gtag('config', 'UA-134909400-1');
     </script>
     <script src="js/prism.min.js"></script>
     <link href="https://fonts.googleapis.com/css?family=Comfortaa:700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=PT+Serif&display=swap" rel="stylesheet">
     <script src="https://kit.fontawesome.com/1e6602f603.js"></script>
+    <script>
+        $('.popup *').click(() => {
+            $('.popup-inside').removeClass('delay-1s').addClass('fadeOutUp');
+            setTimeout(() => $('.popup-inside').hide(), 1500)
+        })
+    </script>
 </body>
 </html>
